@@ -120,7 +120,7 @@ with col1:
       "logo": st.column_config.ImageColumn(
         "logo", help="Streamlit app preview screenshots"
       )
-    }, hide_index=True, key='west')
+    }, hide_index=True, key='west', height = 570)
 st.markdown("---")
 with col2:
   col5,col6 = st.columns(2, border=True)
