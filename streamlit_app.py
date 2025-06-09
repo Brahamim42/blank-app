@@ -149,7 +149,7 @@ col3,col4 = st.columns(2, border=True)
 with col3:
   st.subheader("Blowouts", divider=True)
   blowouts = all_games[all_games['difference'] >= 20]
-  st.data_editor(blowouts, column_config={
+  st.data_editor(blowouts[['home logo', 'home', 'away', 'away logo']], column_config={
     "home logo": st.column_config.ImageColumn(
       "", help="Streamlit app preview screenshots"
     ), "away logo": st.column_config.ImageColumn(
@@ -158,7 +158,7 @@ with col3:
 with col4:
   st.subheader("Tight Games", divider=True)
   tight = all_games[all_games['difference'] <= 5]
-  st.data_editor(tight,column_config={
+  st.data_editor(tight[['home logo', 'home', 'away', 'away logo']],column_config={
     "home logo": st.column_config.ImageColumn(
       "", help="Streamlit app preview screenshots"
     ), "away logo": st.column_config.ImageColumn(
