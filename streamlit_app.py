@@ -90,6 +90,7 @@ def getNightStats(date):
     df = getPlayerStats(game)
     all_df.append(df)
   if len(all_df) == 0: return []
+  if len(all_df) == 1: return all_df[0]
   all_stats = pd.concat(all_df, ignore_index=True)
 
   return all_stats
