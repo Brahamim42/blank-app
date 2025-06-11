@@ -5,7 +5,7 @@ import headshot
 import datetime as dt
 
 st.set_page_config(layout="wide")
-DATE = '2025-02-03'
+DATE = '2025-02-05'
 
 payload={}
 headers = {
