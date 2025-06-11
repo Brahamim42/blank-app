@@ -5,7 +5,7 @@ import headshot
 import datetime as dt
 
 st.set_page_config(layout="wide")
-DATE = dt.date.today()
+DATE = '2025-02-01'#dt.date.today()
 
 payload={}
 headers = {
