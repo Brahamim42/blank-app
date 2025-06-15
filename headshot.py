@@ -38,12 +38,14 @@ def get_player_id(name, season="2024-25"):
         if lname in row[idx_name].lower():
             return row[idx_id]
 
-    raise ValueError(f"Player '{name}' not found on {season} roster.")
+    #raise ValueError(f"Player '{name}' not found on {season} roster.")
+    return -1
 
 def build_headshot_url(player_id):
     """
     Given NBA PERSON_ID, return the CDN URL for the 1040×760 PNG headshot.
     """
+    if player_id == -1: return r"https://cdn.phenompeople.com/CareerConnectResources/NBANBAUS/social/1024x512-1670500646586.jpg"
     return CDN_TEMPLATE.format(player_id=player_id)
 
 def fetch_nba_headshot(name, season="2024-25", save_dir="headshots"):
