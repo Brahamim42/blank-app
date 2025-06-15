@@ -102,6 +102,7 @@ all_games = all_games[['home logo', 'home score', 'away score', 'away logo', 'di
 all_games.rename(columns={'home score': 'home', 'away score': 'away'}, inplace=True)
 if len(gamesid) == 0:
   st.header("No games last night")
+  print(all_stats, all_games)
 else:
   mvp = all_stats.head(1)
   if "which_df" not in st.session_state:
@@ -125,7 +126,7 @@ else:
         "logo": st.column_config.ImageColumn(
           "logo", help="Streamlit app preview screenshots"
         )
-      }, hide_index=True, key='west')
+      }, hide_index=True, key='west',height=570)
   st.markdown("---")
   with col2:
     col5,col6 = st.columns(2, border=True)
