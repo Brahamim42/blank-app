@@ -1,11 +1,13 @@
 import requests
 import pandas as pd
 import streamlit as st
+from streamlit.elements.lib.column_types import ColumnConfig
 import headshot
 import datetime as dt
+import numpy as np
 
 st.set_page_config(layout="wide")
-DATE = dt.date.today()
+DATE = '2025-01-14'
 
 payload={}
 headers = {
@@ -95,16 +97,48 @@ def getNightStats(date):
 
   return all_stats
 
+def getWinners(games, flag):
+  if flag!=0:
+    games['winner'] = np.where(
+      games['home score'] > games['away score'],
+      games['home team'],
+      np.where(games['away score'] > games['home score'], games['away team'], None)
+    )
+    winners = games['winner'].dropna().unique().tolist()
+    return winners
+  return None
+
+def getStreaks():
+  url = f"https://v2.nba.api-sports.io/standings?league=standard&season=2024"
+  response = (requests.request("GET", url, headers=headers, data=payload)).json()
+  hot, cold = [], []
+  for team in response['response']:
+    curr = [team['team']['logo'], team['team']['name'], team['streak']]
+    if team['winStreak']:
+      hot.append(curr)
+    else:
+      cold.append(curr)
+  hot_teams = pd.DataFrame(hot)
+  hot_teams.rename(columns={0: 'logo', 1: 'Team', 2: 'Streak'}, inplace=True)
+  cold_teams = pd.DataFrame(cold)
+  cold_teams.rename(columns={0: 'logo', 1: 'Team', 2: 'Streak'}, inplace=True)
+  hot_teams.sort_values(by='Streak', ascending=False, inplace=True)
+  cold_teams.sort_values(by='Streak', ascending=False, inplace=True)
+
+  return hot_teams, cold_teams
+
+hot_teams, cold_teams = getStreaks()
 east, west = getConferenceStandings("east"), getConferenceStandings('west')
 all_stats = getNightStats(DATE)
 all_games, gamesid = getGamesofDate(DATE)
+winners = getWinners(all_games, len(gamesid))
 all_games = all_games[['home logo', 'home score', 'away score', 'away logo', 'difference']]
 all_games.rename(columns={'home score': 'home', 'away score': 'away'}, inplace=True)
 if len(gamesid) == 0:
   st.header("No games last night")
-  print(all_stats, all_games)
 else:
-  mvp = all_stats.head(1)
+  players_won = all_stats[all_stats['team_name'].isin(winners)]
+  mvp = players_won.head(1)
   if "which_df" not in st.session_state:
       st.session_state.which_df = "east"
 
@@ -145,11 +179,38 @@ else:
       }, hide_index=True, key='all')
 
     with col6:
-      st.header("Honourable Mentions", divider=True)
-      for i in range(1,4):
-        st.image(headshot.fetch_nba_headshot(f"{all_stats.iloc[i]['player_firstname']} {all_stats.iloc[i]['player_lastname']}"),
-                 caption=all_stats.iloc[i]['team_name'], width=200)
-        st.markdown(f"<h6>{all_stats.iloc[i]['player_firstname']} {all_stats.iloc[i]['player_lastname']} - {all_stats.iloc[i]['points']}/{all_stats.iloc[i]['totReb']}/{all_stats.iloc[i]['assists']}</h6>", unsafe_allow_html=True)
+      st.header("League Leaders", divider=True)
+      option = st.selectbox("Select a Category",
+        ("Points", "Rebounds", "Assists", "Steals", "Blocks"),
+      )
+      dict = {'Points': 'points', 'Rebounds': 'totReb', 'Assists': 'assists', 'Steals': 'steals', 'Blocks': 'blocks'}
+      view_df = all_stats[['player_firstname','player_lastname','team_name', dict[option]]]
+      view_df = view_df.sort_values(by=dict[option], ascending=False).reset_index(drop=True)
+      view_df['Player'] = view_df['player_firstname'] +' ' + view_df['player_lastname']
+      view_df.rename(columns={'team_name': 'Team'}, inplace=True)
+      view_df = view_df[['Player', 'Team', dict[option]]]
+      view_df.index = range(1, len(view_df) + 1)
+      view_df.index.name='Rank'
+      col_cfg = {col: ColumnConfig(width="auto") for col in view_df.columns}
+
+      st.data_editor(
+        view_df.head(5),
+        column_config=col_cfg,
+        use_container_width=True
+      )
+
+      st.header("Didn't show up", divider=True)
+      view_df2 = view_df.sort_values(by=dict[option], ascending=True).reset_index(drop=True)
+      view_df2[dict[option]] = view_df2[dict[option]].astype(int)
+      filtered_df = view_df2[view_df2[dict[option]] > 0]
+      filtered_df.index.name = 'Rank'
+
+      st.data_editor(
+        filtered_df.head(5),
+        column_config=col_cfg,
+        use_container_width=True
+      )
+
 
   col3,col4 = st.columns(2, border=True)
   with col3:
@@ -161,12 +222,25 @@ else:
       ), "away logo": st.column_config.ImageColumn(
         "", help="Streamlit app preview screenshots")
     }, hide_index=True, key='blowout')
-  with col4:
+
     st.subheader("Tight Games", divider=True)
     tight = all_games[all_games['difference'] <= 5]
-    st.data_editor(tight,column_config={
+    st.data_editor(tight, column_config={
       "home logo": st.column_config.ImageColumn(
         "", help="Streamlit app preview screenshots"
       ), "away logo": st.column_config.ImageColumn(
         "", help="Streamlit app preview screenshots")
     }, hide_index=True, key='tight')
+  with col4:
+    st.subheader("Hot Streak", divider=True)
+    st.data_editor(hot_teams.head(3), column_config={
+      "logo": st.column_config.ImageColumn(
+        "", help="Streamlit app preview screenshots"
+      ),
+    }, hide_index=True, key='hot')
+    st.subheader("Ice Cold", divider=True)
+    st.data_editor(cold_teams.head(3), column_config={
+      "logo": st.column_config.ImageColumn(
+        "", help="Streamlit app preview screenshots"
+      ),
+    }, hide_index=True, key='cold')
