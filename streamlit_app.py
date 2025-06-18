@@ -7,7 +7,7 @@ import datetime as dt
 import numpy as np
 
 st.set_page_config(layout="wide")
-DATE = '2025-01-14'
+DATE = dt.date.today()
 
 payload={}
 headers = {
