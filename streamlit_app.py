@@ -7,7 +7,7 @@ import datetime as dt
 import numpy as np
 
 st.set_page_config(layout="wide")
-DATE = '2025-02-14'
+DATE = '2022-03-09'
 
 payload={}
 headers = {
