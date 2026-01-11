@@ -12,7 +12,6 @@ DATE = '2022-03-09'
 payload={}
 headers = {
   'x-rapidapi-key': st.secrets["KEY"],
-  'x-rapidapi-host': 'v2.nba.api-sports.io'
 }
 
 def getConferenceStandings(conference):
